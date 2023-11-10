@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 
+import shared.MovementFlag;
+
 public class Window extends JFrame implements Runnable, ActionListener {
 	/**
 	 * sufiDev - November 2023
@@ -16,11 +18,11 @@ public class Window extends JFrame implements Runnable, ActionListener {
 	private Dimension d;
 	private Thread thread;
 	private JButton btn;
-	private boolean moving;
+	private MovementFlag flag;
 	private Vector v;
 	private final long DELAY;
 
-	public Window(int i) {
+	public Window(int i, MovementFlag flag) {
 		super();
 		d = Toolkit.getDefaultToolkit().getScreenSize();
 		setSize(d.width / 5, d.height / 5);
@@ -28,6 +30,8 @@ public class Window extends JFrame implements Runnable, ActionListener {
 		setTitle(title);
 		setResizable(false);
 		setVisible(false);
+		
+		this.flag = flag;
 
 		btn = new JButton("Exit");
 		add(btn);
@@ -42,12 +46,14 @@ public class Window extends JFrame implements Runnable, ActionListener {
 	}
 
 	public void run() {
-		moving = true;
+		// moving = true;
+		flag.setMoving(true);
 		while (true) {
-			synchronized (thread) {
-				if (!moving) {
+			synchronized (flag) {
+				// if (!moving) {
+				if (!flag.isMoving()) {
 					try {
-						thread.wait();
+						flag.wait();
 					} catch (Exception e) {
 					}
 				}
@@ -73,6 +79,10 @@ public class Window extends JFrame implements Runnable, ActionListener {
 	}
 
 	private void handleButton() {
-		moving = false;
+		// moving = false;
+		synchronized (flag) {
+			flag.setMoving(!flag.isMoving());
+			flag.notifyAll();
+		}
 	}
 }
