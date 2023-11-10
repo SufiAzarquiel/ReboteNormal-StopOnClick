@@ -45,7 +45,7 @@ public class Window extends JFrame implements Runnable, ActionListener {
 		moving = true;
 		while (true) {
 			synchronized (thread) {
-				while (!moving) {
+				if (!moving) {
 					try {
 						thread.wait();
 					} catch (Exception e) {
@@ -74,8 +74,5 @@ public class Window extends JFrame implements Runnable, ActionListener {
 
 	private void handleButton() {
 		moving = false;
-		synchronized (thread) {
-			thread.notifyAll();
-		}
 	}
 }
