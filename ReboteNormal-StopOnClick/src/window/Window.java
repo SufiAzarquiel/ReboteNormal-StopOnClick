@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.Console;
+import java.io.Serial;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -14,31 +16,33 @@ public class Window extends JFrame implements Runnable, ActionListener {
 	/**
 	 * sufiDev - November 2023
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
-	private Dimension d;
 	private Thread thread;
-	private JButton btn;
-	private MovementFlag flag;
-	private Vector v;
+	private final JButton btn;
+	private final MovementFlag flag;
+	private final Vector v;
 	private final long DELAY;
+	private final int localNumber;
 
 	public Window(int i, MovementFlag flag) {
 		super();
-		d = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 		setSize(d.width / 5, d.height / 5);
-		String title = "Window number: " + i;
+		String title = "n: " + i;
 		setTitle(title);
 		setResizable(false);
 		setVisible(false);
 		
 		this.flag = flag;
+		localNumber = i;
 
 		btn = new JButton("Exit");
 		add(btn);
 		btn.addActionListener(this);
 
 		v = new Vector(d.width, d.height, 2);
-		DELAY = 10;
+		DELAY = 20;
 
 		thread = new Thread(this);
 		thread.setName(title);
@@ -46,17 +50,17 @@ public class Window extends JFrame implements Runnable, ActionListener {
 	}
 
 	public void run() {
-		// moving = true;
-		flag.setMoving(true);
 		while (true) {
 			synchronized (flag) {
 				// if (!moving) {
-				if (!flag.isMoving()) {
+				while(!flag.isMoving(localNumber)) {
 					try {
 						flag.wait();
-					} catch (Exception e) {
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
 					}
 				}
+
 			}
 
 			v.nextPos();
@@ -68,6 +72,7 @@ public class Window extends JFrame implements Runnable, ActionListener {
 			try {
 				Thread.sleep(DELAY);
 			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
 			}
 		}
 	}
@@ -81,8 +86,7 @@ public class Window extends JFrame implements Runnable, ActionListener {
 	private void handleButton() {
 		// moving = false;
 		synchronized (flag) {
-			flag.setMoving(!flag.isMoving());
-			flag.notifyAll();
+			flag.updateMoving(localNumber);
 		}
 	}
 }
